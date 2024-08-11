@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zila Mining Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('https://www.dropbox.com/scl/fi/7xcyux934bq62z3tqe6qp/zila_background.png.jpg?rlkey=zhmpbcih2nkkcimmrwcgs3ivm&dl=1');
+            background-size: cover;
+            background-position: center;
+            color: #fff;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .content {
+            width: 90%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
+        .button {
+            background-color: #4CAF50;
+            color: #fff;
+            padding: 15px 25px;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            margin: 15px;
+            border-radius: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, background-color 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: #3e8e41;
+            transform: translateY(-5px);
+        }
+
+        .button.mine-zila {
+            background-color: #00008B; /* Dark blue */
+            color: #ADD8E6; /* Light blue */
+            position: relative;
+        }
+
+        .flash-message {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: yellow;
+            color: red;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            display: none;
+            z-index: 10;
+        }
+
+        .ton-image {
+            width: 60px;
+            height: 60px;
+            margin: 20px auto;
+            animation: spin 2s linear infinite;
+            cursor: pointer;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            font-size: 24px;
+            z-index: 1000;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            animation: fadeIn 2s ease-in-out;
+        }
+
+        h2 {
+            font-size: 28px;
+            margin: 15px 0;
+            animation: fadeIn 2.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        table {
+            width: 100%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            background-color: black;
+        }
+
+        th, td {
+            border: 1px solid #fff;
+            padding: 10px;
+            text-align: left;
+            color: #007bff;
+        }
+
+        th {
+            background-color: #e9f2ff;
+        }
+
+        .floating {
+            animation: float 2s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .animated-text {
+            animation: textAnimation 3s ease-in-out infinite;
+        }
+
+        @keyframes textAnimation {
+            0%, 100% {
+                color: #ffcc00;
+            }
+            50% {
+                color: #fff;
+            }
+        }
+
+        .tick {
+            color: green;
+        }
+
+        .rolling {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #007bff;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: rolling 1s linear infinite;
+        }
+
+        @keyframes rolling {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        input {
+            padding: 10px;
+            margin: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            width: calc(100% - 40px);
+            box-sizing: border-box;
+            max-width: 400px;
+        }
+
+        .goal-progress {
+            margin: 20px 0;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.6);
+            border-radius: 10px;
+        }
+
+        .progress-bar-container {
+            background-color: #ddd;
+            border-radius: 25px;
+            padding: 3px;
+            margin: 10px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #4CAF50;
+            border-radius: 20px;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="loadingScreen" class="loading-screen">
+        <div>
+            <img src="https://www.dropbox.com/scl/fi/bdzcyfnndpyvce17jo566/Designer-1.png?rlkey=7b9y1hi69til6ltoyb9ya46u2&dl=1" alt="Loading Image" style="width: 100px; height: 100px;">
+            <p>Loading Tokens... 99%</p>
+            <p style="font-size: 48px; font-family: 'Courier New', Courier, monospace;" class="animated-text">ZiLA launching on TON</p>
+            <img src="https://s2.coinmarketcap.com/static/img/coins/200x200/11419.png" alt="TON Cryptocurrency" class="ton-image">
+        </div>
+    </div>
+    <div class="content">
+        <h1>Zila Mining Game</h1>
+        <div>
+            <h2>Level: <span id="level">1</span></h2>
+            <h2>Zila Balance: <span id="zilaBalance">0.000000</span></h2>
+            <h2>Ton Balance: <span id="tonBalance">0.0000001</span></h2>
+            <h2>Time Left: <span id="timer">12:00:00</span></h2>
+            <button class="button floating mine-zila" onclick="startMining()">
+                Mine ZiLA
+                <span class="flash-message" id="flashMessage">power +1⚡😠⚡🚀</span>
+            </button>
+            <div class="goal-progress">
+                <h2>Tap Goal: <span id="tapGoalStatus">10,000</span> taps left</h2>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="tapProgressBar">100%</div>
+                </div>
+            </div>
+            <p>The more you tap the greater your automatic mining power🔥⚡⛏️🟡</p>
+            <img src="https://s2.coinmarketcap.com/static/img/coins/200x200/11419.png" alt="TON Cryptocurrency" class="ton-image" onclick="mineTon()">
+            <input type="text" id="boostCode" placeholder="Enter boost code">
+            <button class="button" onclick="applyBoost()">Apply Boost</button>
+            <input type="text" id="tamCode" placeholder="Ton Automatic Mining⚙️⚡🤖">
+            <button class="button" onclick="applyTAMCode()">Activate TAM</button>
+        </div>
+        <div>
+            <h2>Wallet</h2>
+            <button class="button" onclick="connectWallet()">Connect Ton wallet</button>
+            <input type="text" id="walletAddress" placeholder="Enter Ton keeper address">
+            <button class="button" onclick="copyWalletAddress()">Copy Wallet Address</button>
+            <p id="walletStatus"></p>
+        </div>
+        <div>
+            <h2>Withdraw Ton</h2>
+            <input type="number" id="withdrawAmount" placeholder="Enter amount to withdraw">
+            <button class="button" onclick="withdrawTon()">Withdraw</button>
+            <p id="withdrawStatus"></p>
+            <table id="transactionHistory">
+                <thead>
+                    <tr>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Transaction entries will be dynamically inserted here -->
+                </tbody>
+            </table>
+            <p>Pay 0.3 Ton only for gas fee to this Ton address: <span id="tonWalletAddress">UQA9fOc8d-twnwZQk7CeGP6-7XBDbz9ku9vKvYbrH0wwlMl</span></p>
+            <p>Screenshot your transaction, go to ZiLA Telegram bot, and click verify my withdrawal then send the screenshot. You'll get your TON in less than an hour.</p>
+        </div>
+        <div>
+            <h2>Daily Rewards</h2>
+            <button class="button" onclick="claimDailyReward()">Claim Daily Reward</button>
+            <p id="dailyRewardStatus"></p>
+        </div>
+        <div>
+            <h2>Goals</h2>
+            <p>Tap "Mine ZiLA" button 10,000 times a day to get 0.05 TON</p>
+            <p>Refer 10 friends to get 0.5 TON + 10,000 ZiLA Tokens</p>
+            <p>Refer 20 friends to get 2 TON + 50,000 ZiLA Tokens</p>
+            <a href="https://t.me/Zila1_bot" target="_blank">Refer your friends using this link and mention your Telegram ID</a>
+            <button class="button" onclick="copyReferralLink()">Copy Referral Link</button>
+        </div>
+    </div>
+
+    <script>
+        let zilaBalance = parseFloat(localStorage.getItem('zilaBalance')) || 0;
+        let tonBalance = parseFloat(localStorage.getItem('tonBalance')) || 0.0000001;
+        let level = parseInt(localStorage.getItem('level')) || 1;
+        let miningInterval;
+        let countdownInterval;
+        let tonBoost = 1;
+        let tamMiningInterval;
+        let tamActive = false;
+        let tapCount = parseInt(localStorage.getItem('tapCount')) || 0;
+        let tapGoal = parseInt(localStorage.getItem('tapGoal')) || 10000;
+        let lastLoginDate = localStorage.getItem('lastLoginDate');
+        let consecutiveDays = parseInt(localStorage.getItem('consecutiveDays')) || 0;
+        let lastTapReset = parseInt(localStorage.getItem('lastTapReset')) || Date.now();
+
+        const dailyRewards = [10, 15, 20, 50, 100, 500, 2000];
+        const goals = {
+            taps: 10000,
+            refer10: false,
+            refer20: false
+        };
+
+        document.getElementById('zilaBalance').innerText = zilaBalance.toFixed(6);
+        document.getElementById('tonBalance').innerText = tonBalance.toFixed(7);
+        document.getElementById('level').innerText = level;
+
+        window.onload = function() {
+            setTimeout(() => {
+                document.getElementById('loadingScreen').classList.add('hidden');
+            }, 3000);
+            loadTransactions();
+            updateLevel();
+            checkDailyReward();
+            updateTapGoal();
+        };
+
+        function startMining() {
+            let endTime = Date.now() + 12 * 60 * 60 * 1000;
+            countdownInterval = setInterval(() => {
+                let now = Date.now();
+                let timeLeft = endTime - now;
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    clearInterval(miningInterval);
+                    alert('Mining session ended! Screenshot your score.');
+                } else {
+                    let hours = Math.floor(timeLeft / (1000 * 60 * 60));
+                    let minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                    let seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                    document.getElementById('timer').innerText = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }
+            }, 1000);
+
+            miningInterval = setInterval(() => {
+                zilaBalance += 0.000005;
+                document.getElementById('zilaBalance').innerText = zilaBalance.toFixed(6);
+                localStorage.setItem('zilaBalance', zilaBalance);
+                updateLevel();
+            }, 1000);
+
+            // Show flash message on mine button
+            let flashMessage = document.getElementById('flashMessage');
+            flashMessage.style.display = 'block';
+            setTimeout(() => {
+                flashMessage.style.display = 'none';
+            }, 500);
+
+            // Update tap count for daily goal
+            tapCount++;
+            tapGoal--;
+            localStorage.setItem('tapCount', tapCount);
+            localStorage.setItem('tapGoal', tapGoal);
+            updateTapGoal();
+            checkGoals();
+        }
+
+        function mineTon() {
+            tonBalance += 0.0000005 * tonBoost;
+            document.getElementById('tonBalance').innerText = tonBalance.toFixed(7);
+            localStorage.setItem('tonBalance', tonBalance);
+        }
+
+        function applyBoost() {
+            const code = document.getElementById('boostCode').value;
+            const validCodes = ["10101100", "072024", "199991", "dragonhide", "TONCOIN", "Lufenica9", "$1.5B", "Elon musk", "ZiLAboost", "Deltaforce100"];
+            if (validCodes.includes(code)) {
+                tonBoost = 100;
+                alert('Boost applied! Tapping Power X 100 ');
+            } else {
+                alert('Invalid code.');
+            }
+        }
+
+        function applyTAMCode() {
+            const code = document.getElementById('tamCode').value;
+            const validTAMCodes = ["1Start-TON1", "Engine-wealth", "kikoz9", "Mantra24", "Eth-on-fire", "petrol-or-solar", "Pump-Trump", "listing-date", "zila-is-0.05Ton"];
+            if (validTAMCodes.includes(code) && !tamActive) {
+                tamActive = true;
+                alert('Automatic Mining activated for 24 hours.');
+                tamMiningInterval = setInterval(() => {
+                    tonBalance += 0.000005;
+                    document.getElementById('tonBalance').innerText = tonBalance.toFixed(7);
+                    localStorage.setItem('tonBalance', tonBalance);
+                }, 1000);
+                setTimeout(() => {
+                    clearInterval(tamMiningInterval);
+                    tamActive = false;
+                    alert('Automatic Mining session ended.');
+                }, 24 * 60 * 60 * 1000); // 24 hours
+            } else {
+                alert('Invalid or already used TAM code.');
+            }
+        }
+
+        function connectWallet() {
+            const walletAddress = document.getElementById('walletAddress').value;
+            if (walletAddress) {
+                document.getElementById('walletStatus').innerText = `Wallet connected successfully: ${walletAddress}`;
+            } else {
+                alert('Please enter a valid wallet address.');
+            }
+        }
+
+        function withdrawTon() {
+            const withdrawAmount = parseFloat(document.getElementById('withdrawAmount').value);
+            if (withdrawAmount > 0 && withdrawAmount <= tonBalance) {
+                tonBalance -= withdrawAmount;
+                document.getElementById('tonBalance').innerText = tonBalance.toFixed(7);
+                localStorage.setItem('tonBalance', tonBalance);
+
+                // Save withdrawal transaction to local storage
+                const transactions = JSON.parse(localStorage.getItem('tonWithdraw')) || [];
+                const transaction = {
+                    amount: withdrawAmount.toFixed(7),
+                    status: 'Pending',
+                    date: new Date().toLocaleString()
+                };
+                transactions.push(transaction);
+                localStorage.setItem('tonWithdraw', JSON.stringify(transactions));
+
+                // Update transaction history table
+                addTransactionToTable(transaction);
+
+                document.getElementById('withdrawStatus').innerText = 'Withdrawal request submitted. Please pay the gas fee and verify your transaction.';
+            } else {
+                alert('Invalid withdrawal amount.');
+            }
+        }
+
+        function addTransactionToTable(transaction) {
+            const transactionHistory = document.getElementById('transactionHistory').getElementsByTagName('tbody')[0];
+            const newRow = transactionHistory.insertRow();
+            const amountCell = newRow.insertCell(0);
+            const statusCell = newRow.insertCell(1);
+            const dateCell = newRow.insertCell(2);
+            amountCell.innerText = transaction.amount;
+            statusCell.innerHTML = transaction.status === 'Pending' ? '<span class="rolling"></span> Pending' : '<span class="tick">✓ Successful</span>';
+            dateCell.innerText = transaction.date;
+        }
+
+        function loadTransactions() {
+            const transactions = JSON.parse(localStorage.getItem('tonWithdraw')) || [];
+            transactions.forEach(transaction => {
+                if (transaction.status === 'Pending') {
+                    transaction.status = 'Successful';
+                }
+                addTransactionToTable(transaction);
+            });
+            localStorage.setItem('tonWithdraw', JSON.stringify(transactions));
+        }
+
+        function copyWalletAddress() {
+            const tonWalletAddress = "UQA9fOc8d-twnwZQk7CeGP6-7XBDbz9ku9vKvYbrH0wwlMl";
+            navigator.clipboard.writeText(tonWalletAddress)
+                .then(() => alert('Wallet address copied to clipboard!'))
+                .catch(err => console.log('Error copying wallet address:', err));
+        }
+
+        function updateLevel() {
+            const levelThresholds = [
+                { level: 1, threshold: 0, label: 'Student 🥺' },
+                { level: 2, threshold: 1000, label: 'Graduate ☺️' },
+                { level: 3, threshold: 10000, label: 'Employee 😠' },
+                { level: 4, threshold: 100000, label: 'Manager ⚙️' },
+                { level: 5, threshold: 500000, label: 'General Manager 👔' },
+                { level: 6, threshold: 1000000, label: 'Boss 😎' },
+                { level: 7, threshold: 1000000, label: 'Mining Company 💎🏢' }
+            ];
+
+            for (let i = levelThresholds.length - 1; i >= 0; i--) {
+                if (zilaBalance >= levelThresholds[i].threshold) {
+                    level = levelThresholds[i].level;
+                    document.getElementById('level').innerText = `${level} (${levelThresholds[i].label})`;
+                    localStorage.setItem('level', level);
+                    break;
+                }
+            }
+        }
+
+        function checkDailyReward() {
+            const today = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
+
+            if (lastLoginDate !== today) {
+                // New day, reset tap count and increment consecutive days
+                tapCount = 0;
+                localStorage.setItem('tapCount', tapCount);
+
+                if (lastLoginDate) {
+                    const lastDate = new Date(lastLoginDate);
+                    const diffTime = Math.abs(new Date(today) - lastDate);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                    if (diffDays === 1) {
+                        // Consecutive day login
+                        consecutiveDays++;
+                        if (consecutiveDays > 7) {
+                            consecutiveDays = 1; // Reset after a week
+                        }
+                    } else {
+                        // Missed a day
+                        consecutiveDays = 1;
+                    }
+                } else {
+                    consecutiveDays = 1; // First login
+                }
+
+                localStorage.setItem('consecutiveDays', consecutiveDays);
+                localStorage.setItem('lastLoginDate', today);
+            }
+
+            document.getElementById('dailyRewardStatus').innerText = `Day ${consecutiveDays} reward available.`;
+        }
+
+        function claimDailyReward() {
+            const today = new Date().toISOString().split('T')[0];
+            if (lastLoginDate === today) {
+                const reward = dailyRewards[consecutiveDays - 1];
+                zilaBalance += reward;
+                document.getElementById('zilaBalance').innerText = zilaBalance.toFixed(6);
+                localStorage.setItem('zilaBalance', zilaBalance);
+
+                document.getElementById('dailyRewardStatus').innerHTML = `🎁 Day ${consecutiveDays} reward claimed: ${reward} ZiLA. 🎁`;
+            } else {
+                document.getElementById('dailyRewardStatus').innerText = 'Please login daily to claim your reward.';
+            }
+        }
+
+        function checkGoals() {
+            if (tapCount >= goals.taps) {
+                tonBalance += 0.05;
+                document.getElementById('tonBalance').innerText = tonBalance.toFixed(7);
+                localStorage.setItem('tonBalance', tonBalance);
+                alert('Goal achieved: 10,000 taps! You have earned 0.05 TON.');
+                tapCount = 0; // Reset tap count
+                localStorage.setItem('tapCount', tapCount);
+            }
+
+            // Refer goals are to be checked via server-side or separate logic
+        }
+
+        function updateTapGoal() {
+            const progressBar = document.getElementById('tapProgressBar');
+            const tapGoalStatus = document.getElementById('tapGoalStatus');
+
+            if (tapGoal <= 0) {
+                const now = Date.now();
+                if (now - lastTapReset >= 3 * 60 * 60 * 1000) { // 3 hours in milliseconds
+                    tapGoal = 10000;
+                    lastTapReset = now;
+                    localStorage.setItem('tapGoal', tapGoal);
+                    localStorage.setItem('lastTapReset', lastTapReset);
+                }
+            }
+
+            const progressPercentage = Math.max(0, (tapGoal / 10000) * 100).toFixed(2);
+
+            progressBar.style.width = `${progressPercentage}%`;
+            progressBar.innerText = `${progressPercentage}%`;
+            tapGoalStatus.innerText = `${tapGoal} taps left`;
+        }
+
+        function copyReferralLink() {
+            const referralLink = "https://t.me/Zila1_bot";
+            navigator.clipboard.writeText(referralLink)
+                .then(() => alert('Referral link copied to clipboard!'))
+                .catch(err => console.log('Error copying referral link:', err));
+        }
+    </script>
+</body>
+</html>
